@@ -14,6 +14,7 @@ pub enum TargetMsg {
     Test1 {},
     Test2 {},
     Test3 {},
+    Test1231321 {},
     Attack { submsg_addr: String },
 }
 

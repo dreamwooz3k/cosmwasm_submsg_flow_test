@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CosmosMsg, WasmMsg, to_binary};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CosmosMsg, WasmMsg, to_binary, BankMsg, Coin, Uint128, SubMsg, ReplyOn, Reply};
 // use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -48,7 +48,21 @@ pub fn execute_flow2(env: Env, _submsg_addr: String, _reentry_addr: String) -> R
     let msgs3 = to_binary(&TargetMsg::Test2{})?;
     let msgs2 = to_binary(&TargetMsg::Test3{})?;
     let msgs4 = to_binary(&ExecuteMsg::Flow{ submsg_addr: _submsg_addr.to_string()})?;
-    let msgs5 = to_binary(&TargetMsg::Attack{})?;
+    let msgs5 = to_binary(&TargetMsg::Attack{ submsg_addr: _submsg_addr.to_string()})?;
+    let mut msgs6:Vec<Coin> = Vec::new();
+    msgs6.push(Coin{
+        denom: "umlg".to_string(),
+        amount: Uint128::new(100)
+    });
+    let msg7:CosmosMsg = CosmosMsg::Bank(BankMsg::Burn {
+        amount: msgs6,
+    });
+    let msg8:SubMsg = SubMsg{
+        id: 1,
+        msg: msg7,
+        gas_limit: None,
+        reply_on: ReplyOn::Success
+    };
     Ok(Response::new().add_messages(vec![
         CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: _submsg_addr.clone(),
@@ -74,8 +88,23 @@ pub fn execute_flow2(env: Env, _submsg_addr: String, _reentry_addr: String) -> R
             contract_addr: env.contract.address.to_string(),
             msg: msgs4, // test 1
             funds: vec![],
-        })
-    ]))
+        }),
+    ])
+    .add_submessage(msg8)
+)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(_deps: DepsMut, env: Env, msg: Reply) -> StdResult<Response> {
+    
+    Ok(Response::new().
+        add_attribute("action", msg.id.to_string())
+        .add_attribute("action2", msg.result.is_ok().to_string())
+        .add_attribute("action3", msg.result.is_err().to_string())
+        .add_event(msg.result.unwrap().events[0].clone())
+        .add_attribute("result", env.contract.address.to_string())
+        //.add_attribute("", value)
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
