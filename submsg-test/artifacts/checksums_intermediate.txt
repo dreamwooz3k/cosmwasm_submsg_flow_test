@@ -1,0 +1,1 @@
+4584dbd6368eb716a813d8126e3c46afb0f815243febfeec34268358623ce07a  ./target/wasm32-unknown-unknown/release/submsg_test.wasm

@@ -1,0 +1,1 @@
+ed46674b5749cad4a9f09c49ffef05dff1cece159bd03ac0b1fe4c12e1d39bad  submsg_test.wasm
